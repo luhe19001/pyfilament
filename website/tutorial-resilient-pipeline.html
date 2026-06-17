@@ -107,17 +107,16 @@
   <nav class="nav">
     <a class="brand" href="filament-landing-page.html"><img src="pyfilament-mark-square.png" alt="pyfilament" />pyfilament</a>
     <div class="sp"></div>
-    <a class="lnk" href="features.html">Features</a>
-    <a class="lnk on" href="tutorial.html">Tutorial</a>
+    <a class="lnk on" href="tutorial-resilient-pipeline.html">Tutorial</a>
     <a class="lnk" href="https://github.com/pyfilament/pyfilament">GitHub</a>
   </nav>
 
   <div class="wrap">
     <header class="hero">
-      <span class="eyebrow">Get started · ~10 min · no LLM needed</span>
+      <span class="eyebrow">Get started · ~10 min</span>
       <h1>Build a <em>resilient pipeline</em> with pyfilament.</h1>
-      <p class="lead">We'll fetch and process a batch of web pages — surviving flaky networks, skipping repeated
-        work, staying polite to servers, and watching it all live in a dashboard. Copy each block as you go.</p>
+      <p class="lead">Fetch and process a batch of web pages — through flaky networks, repeated work, and impatient
+        servers — and watch every run live in a dashboard.</p>
     </header>
 
     <div class="build">
@@ -141,9 +140,8 @@
       <!-- STEP 1 -->
       <section class="step" id="s1">
         <div class="sh"><div class="n">1</div><h2>Get set up</h2></div>
-        <p>pyfilament is durable and observable by design, so it uses <b>Redis</b> (for caching, queues and limits)
-          and a <b>database</b> (SQLite by default). The quickest start is to clone the repo — you also get the
-          dashboard UI and the database migrations.</p>
+        <p>pyfilament leans on <b>Redis</b> (caching, queues, limits) and a <b>database</b> (SQLite by default).
+          Cloning the repo is the fastest start — it ships the dashboard UI and the migrations too.</p>
         <div class="win">
           <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">terminal</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="bash"># 1. clone the project (needs Python 3.14+)
@@ -165,7 +163,7 @@ docker run -d -p 6379:6379 redis
 alembic upgrade head</code></pre>
         </div>
         <p class="mut">Run every step from this terminal — activated <code>.venv</code>, inside <code>pyfilament/</code> —
-          so Python, Redis and the database stay in sync.</p>
+          so everything points at the same database.</p>
         <div class="cb warn"><p><b>Two errors beginners hit here</b>, both from drifting out of that setup:</p>
           <ul>
             <li><code class="bad">No module named 'filament.db'</code> — wrong environment; re-run
@@ -182,8 +180,7 @@ alembic upgrade head</code></pre>
       <section class="step" id="s2">
         <div class="sh"><div class="n">2</div><h2>Your first task</h2></div>
         <p>Add <code>@task</code> to any <code>async</code> function. Calling it returns a <em>run</em>; awaiting
-          the run executes it. That's the whole API. Save this as <code>app.py</code> in the <code>pyfilament/</code>
-          folder and run it there.</p>
+          the run executes it. That's the whole API.</p>
         <div class="win">
           <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="py">import asyncio
@@ -196,15 +193,15 @@ async def hello(name):
 print(asyncio.run(hello("filament")))</code></pre>
         </div>
         <div class="run"><span class="pl">▸</span><span>python app.py&nbsp; → &nbsp;<b>hello, filament</b></span></div>
-        <p class="mut">Nothing exotic yet — but that run was already recorded to the database. We'll see it in Step 8.</p>
+        <p class="mut">Nothing fancy yet — but that run is already in the database. It turns up in Step 8.</p>
       </section>
 
       <!-- STEP 3 -->
       <section class="step" id="s3">
         <div class="sh"><div class="n">3</div><h2>Survive a flaky network</h2></div>
-        <p>Real fetches fail and hang. Add <code>tries</code> for automatic retries (with exponential backoff and
-          jitter) and <code>timeout</code> to abort a run that overruns. <code>get_logger()</code> gives you per-run
-          logs that stream to the <b>dashboard</b> (Step 8) — not your console.</p>
+        <p>Real fetches fail and hang. <code>tries</code> adds automatic retries (exponential backoff + jitter);
+          <code>timeout</code> aborts a run that overruns. <code>get_logger()</code> writes per-run logs that stream
+          to the <b>dashboard</b> (Step 8), not your console.</p>
         <div class="win">
           <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="py">import asyncio
@@ -225,15 +222,15 @@ async def fetch(url):
 print(asyncio.run(fetch("https://example.com")))</code></pre>
         </div>
         <div class="run"><span class="pl">▸</span><span>fails twice, retries, recovers on attempt 3 &nbsp;→&nbsp; <b>&lt;html&gt;https://example.com&lt;/html&gt;</b></span></div>
-        <p class="mut">We made the failures deterministic so the demo always succeeds; real code just raises real
-          exceptions. Retry only some of them with <code>retry_exceptions=[...]</code> / <code>no_retry_exceptions=[...]</code>.</p>
+        <p class="mut">The failures are scripted so the demo always lands; real code just raises real exceptions.
+          Narrow what retries with <code>retry_exceptions=[...]</code> / <code>no_retry_exceptions=[...]</code>.</p>
       </section>
 
       <!-- STEP 4 -->
       <section class="step" id="s4">
         <div class="sh"><div class="n">4</div><h2>Don't fetch the same thing twice</h2></div>
-        <p>Add <code>cache=True</code> and pyfilament stores the result. The next call with the same arguments
-          <b>skips the body entirely</b> and returns the stored value (until <code>cache_ttl</code> expires).</p>
+        <p><code>cache=True</code> stores the result. The next call with the same arguments <b>skips the body
+          entirely</b> and returns the stored value — until <code>cache_ttl</code> expires.</p>
         <div class="win">
           <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="py">calls = 0
@@ -253,16 +250,16 @@ async def main():
 asyncio.run(main())</code></pre>
         </div>
         <div class="run"><span class="pl">▸</span><span>same result: <b>True</b> | body ran <b>1</b> time(s)</span></div>
-        <p class="mut">The cache lives in Redis, so it survives restarts — that's why we pass
-          <code>refresh_cache=True</code> on the first call to guarantee a fresh run for this demo.</p>
+        <p class="mut">The cache lives in Redis and survives restarts — hence <code>refresh_cache=True</code> on the
+          first call, to force one fresh run for the demo.</p>
       </section>
 
       <!-- STEP 5 -->
       <section class="step" id="s5">
         <div class="sh"><div class="n">5</div><h2>Be a good citizen</h2></div>
-        <p>Hammering a server gets you blocked. <code>rate_limit</code> caps executions per second and
-          <code>max_concurrent</code> caps how many run at once — and both are enforced <b>across every worker</b>,
-          not just one process.</p>
+        <p>Hammer a server and you'll get blocked. <code>rate_limit</code> caps executions per second;
+          <code>max_concurrent</code> caps how many run at once — both enforced <b>across every worker</b>, not just
+          one process.</p>
         <div class="win">
           <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="py">@task(
@@ -280,9 +277,9 @@ async def fetch(url):
       <!-- STEP 6 -->
       <section class="step" id="s6">
         <div class="sh"><div class="n">6</div><h2>Compose a pipeline from subtasks</h2></div>
-        <p>Tasks can call other tasks. Each call is its own tracked run, so you get a clean parent → child <b>tree</b>
-          you can inspect later. Add these to your <code>app.py</code> <b>alongside <code>fetch</code> from the previous
-          steps</b> — a <code>pipeline</code> walks the URLs, and each <code>process</code> fetches then counts words.</p>
+        <p>Tasks can call other tasks. Each call is its own tracked run, so you get a clean parent → child <b>tree</b>.
+          Here a <code>pipeline</code> walks the URLs and each <code>process</code> fetches a page, then counts its
+          words — reusing <code>fetch</code> from above.</p>
         <div class="win">
           <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="py">@task
@@ -305,17 +302,17 @@ async def pipeline(urls):
 print(asyncio.run(pipeline(["https://a.com", "https://b.com"])))</code></pre>
         </div>
         <div class="run"><span class="pl">▸</span><span>[{'url': 'https://a.com', 'words': 1}, {'url': 'https://b.com', 'words': 1}]</span></div>
-        <div class="cb tip"><p><b>Want them in parallel?</b> Don't reach for <code>asyncio.gather</code> here —
-          hand the URLs to <b>workers</b> instead. That's exactly what the queue in the next step is for.</p></div>
+        <div class="cb tip"><p><b>Want them in parallel?</b> Skip <code>asyncio.gather</code> — hand the URLs to
+          <b>workers</b> instead. That's what the next step's queue is for.</p></div>
       </section>
 
       <!-- STEP 7 -->
       <section class="step" id="s7">
         <div class="sh"><div class="n">7</div><h2>Scale out with workers</h2></div>
         <p>Move <code>fetch</code> off the caller and onto a queue. <code>.request(...)</code> enqueues a job to Redis
-          and hands you back a run; a separate worker process pulls jobs with <code>.serve()</code> and executes them.
-          Split into <b>three files in the same folder</b>: shared task definitions in <code>tasks.py</code> (no
-          <code>asyncio.run</code> at the bottom), which both the worker and producer import.</p>
+          and hands back a run; a separate worker pulls jobs with <code>.serve()</code>. Put the shared definitions in
+          <code>tasks.py</code> (no <code>asyncio.run</code> at the bottom) so the worker and producer can import them —
+          three files, one folder.</p>
         <div class="win">
           <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">tasks.py &nbsp;— shared definitions</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="py">import asyncio
@@ -346,16 +343,16 @@ async def main():
 anyio.run(main)</code></pre>
         </div>
         <div class="run"><span class="pl">▸</span><span>terminal 2 prints &nbsp;<b>worker returned: &lt;html&gt;https://example.com&lt;/html&gt;</b> &nbsp;(terminal 1 keeps serving)</span></div>
-        <p class="mut">Run <b>both commands from the folder holding these three files</b>, or Python can't
-          <code>import tasks</code>. Start as many <code>worker.py</code> processes (or machines) as you like — the
-          queue, rate limits and concurrency caps coordinate them all. Stop a worker cleanly by passing an
-          <code>anyio.Event</code> to <code>serve()</code>.</p>
+        <p class="mut">Run <b>both commands from the folder holding the three files</b>, or Python can't
+          <code>import tasks</code>. Start as many workers (or machines) as you like — the queue, rate limits and
+          concurrency caps coordinate them all. Pass an <code>anyio.Event</code> to <code>serve()</code> to stop one
+          cleanly.</p>
       </section>
 
       <!-- STEP 8 -->
       <section class="step" id="s8">
         <div class="sh"><div class="n">8</div><h2>Watch it live in the dashboard</h2></div>
-        <p>Everything you just ran was recorded. Start the API and the UI to see task types, every run, the state
+        <p>Everything you ran was recorded. Start the API and the UI to browse task types, every run, the state
           timeline, the subtask tree and streaming logs.</p>
         <div class="win">
           <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">terminal</span><span class="cp" data-cp>copy</span></div>
@@ -365,36 +362,20 @@ uvicorn filament.api.main:app --port 5006
 # UI — in another terminal, opens on http://localhost:3001
 cd ui &amp;&amp; npm install &amp;&amp; npm run dev</code></pre>
         </div>
-        <p>Open <a href="http://localhost:3001">localhost:3001</a>. The UI proxies its <code>/api</code> and
-          <code>/graphql</code> calls to the API on :5006, so both need to be running. You'll see each
-          <code>pipeline → process → fetch</code> tree, watch states move
-          <code>created → running → success</code>, and replay the logs from <code>get_logger()</code>.</p>
+        <p>Open <a href="http://localhost:3001">localhost:3001</a> (the UI proxies <code>/api</code> and
+          <code>/graphql</code> to the API on :5006, so keep both running). Every
+          <code>pipeline → process → fetch</code> tree is there — states moving
+          <code>created → running → success</code>, with the <code>get_logger()</code> logs to replay.</p>
         <div class="cb warn"><p><b><code>address already in use</code> on :5006?</b> You probably already started the API
           in another tab — just reuse it. Otherwise find and stop the stray process:
           <code>lsof -i :5006</code>, then <code>kill -9 &lt;PID&gt;</code>.</p></div>
-        <div class="cb tip"><p><b>That's the whole loop:</b> write an <code>async</code> function, add the reliability
-          you need as keywords, scale it across workers, and see every run. No task plumbing to maintain.</p></div>
+        <div class="cb tip"><p><b>That's the whole loop:</b> write an <code>async</code> function, add reliability as
+          keywords, scale it across workers, watch every run. No plumbing to maintain.</p></div>
       </section>
 
-      <!-- LLM teaser -->
+      <!-- closing CTA -->
       <section class="step" id="next" style="border-bottom:none">
-        <div class="sh"><div class="n" style="background:var(--mut);box-shadow:none">★</div><h2>Next up: LLM tasks</h2></div>
-        <p>The same primitives are a natural fit for model calls — which fail, rate-limit, and cost money. A follow-up
-          tutorial will build an LLM workflow on top of what you just learned.</p>
-        <div class="soon">
-          <span class="tag">Coming soon</span>
-          <h3>Wrap a model call in <code>@task</code></h3>
-          <p class="mut" style="margin:0">Everything in this guide applies directly:</p>
-          <ul>
-            <li><b>Retries</b> on transient <code>429 / 5xx</code> errors, with backoff</li>
-            <li><b>Caching</b> identical prompts so you never pay twice</li>
-            <li><b>Rate limits</b> that respect your provider's tokens-per-minute quota</li>
-            <li><b>Subtasks</b> to chain multi-step agents — each step its own observable run</li>
-            <li><b>Full visibility</b> into every prompt, response and retry in the dashboard</li>
-          </ul>
-        </div>
         <div class="cta">
-          <a class="btn p" href="features.html">Browse all features →</a>
           <a class="btn g" href="https://github.com/pyfilament/pyfilament">View on GitHub</a>
         </div>
       </section>
@@ -411,7 +392,6 @@ cd ui &amp;&amp; npm install &amp;&amp; npm run dev</code></pre>
       <a href="#s6">6 · Subtasks</a>
       <a href="#s7">7 · Workers</a>
       <a href="#s8">8 · Dashboard</a>
-      <a href="#next">★ · LLM next</a>
     </aside>
   </div>
 
@@ -419,8 +399,7 @@ cd ui &amp;&amp; npm install &amp;&amp; npm run dev</code></pre>
     <div class="wrap">
       <span>pyfilament — lightweight, durable task framework.</span>
       <span class="sp"></span>
-      <a href="features.html">Features</a>
-      <a href="tutorial.html">Tutorial</a>
+      <a href="tutorial-resilient-pipeline.html">Tutorial</a>
       <a href="https://github.com/pyfilament/pyfilament">GitHub</a>
     </div>
   </footer>

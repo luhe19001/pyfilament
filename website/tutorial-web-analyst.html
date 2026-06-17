@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>pyfilament — summarize the web with an LLM pipeline</title>
+<style>
+  :root{
+    --paper:#faf9f6;--ink:#161311;--mut:#857d74;--line:#eae6df;--card:#fffdfb;
+    --green:#0a9966;--green-d:#07835c;--amber:#c2722f;--blue:#2b7fb8;--purple:#9a5cc7;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.62;font-size:16px}
+  a{color:var(--green-d);text-decoration:none}a:hover{text-decoration:underline}
+  /* nav */
+  .nav{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:18px;
+    padding:13px 26px;background:rgba(250,249,246,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+  .nav .brand img{height:26px;width:26px;display:block;border-radius:6px}
+  .nav .sp{flex:1}
+  .nav a.lnk{color:var(--mut);font-weight:600;font-size:14.5px}.nav a.lnk:hover{color:var(--ink);text-decoration:none}
+  .nav a.lnk.on{color:var(--green-d)}
+  /* hero */
+  .wrap{max-width:1040px;margin:0 auto;padding:0 26px}
+  .hero{padding:58px 0 18px;max-width:680px}
+  .eyebrow{display:inline-block;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--green-d);background:#eaf6f0;border:1px solid #d4ece1;border-radius:999px;padding:5px 12px;margin-bottom:18px}
+  h1{font-size:clamp(30px,5.4vw,44px);line-height:1.07;letter-spacing:-1.4px;font-weight:820;margin:0}
+  h1 em{font-style:normal;color:var(--green-d)}
+  .lead{font-size:18px;color:var(--mut);margin:16px 0 0}
+  /* sdk picker */
+  .pick{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:22px 0 0}
+  .pick .lbl{font-size:14px;color:var(--mut);font-weight:600}
+  .tabs{display:inline-flex;gap:5px;border:1px solid var(--line);border-radius:999px;padding:4px;background:var(--card)}
+  .tabs button{font:inherit;font-weight:700;font-size:14px;color:var(--mut);background:none;border:0;border-radius:999px;
+    padding:7px 18px;cursor:pointer;transition:.12s}
+  .tabs button:hover{color:var(--ink)}
+  .tabs button.on{background:var(--green);color:#fff}
+  /* engine-specific show/hide */
+  .only{display:none}
+  body[data-engine="openai"] .only.openai{display:block}
+  body[data-engine="anthropic"] .only.anthropic{display:block}
+  body[data-engine="gemini"] .only.gemini{display:block}
+  .only-i{display:none}
+  body[data-engine="openai"] .only-i.openai{display:inline}
+  body[data-engine="anthropic"] .only-i.anthropic{display:inline}
+  body[data-engine="gemini"] .only-i.gemini{display:inline}
+  /* build box */
+  .build{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0 6px}
+  @media(max-width:720px){.build{grid-template-columns:1fr}}
+  .build .bx{border:1px solid var(--line);border-radius:13px;padding:16px 18px;background:var(--card)}
+  .build .bx h4{margin:0 0 8px;font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+  .build .bx p{margin:0;font-size:14.5px;color:var(--ink)}
+  .build .bx ul{margin:0;padding-left:18px}.build .bx li{font-size:14.5px;margin:4px 0;color:var(--ink)}
+  .build .bx li b{font-weight:680}
+  /* shell layout: content + sticky toc */
+  .shell{display:grid;grid-template-columns:minmax(0,1fr) 196px;gap:46px;padding:34px 26px 0}
+  @media(max-width:880px){.shell{grid-template-columns:1fr;gap:0}.toc{display:none}}
+  .toc{position:sticky;top:74px;align-self:start;font-size:13.5px;border-left:1px solid var(--line);padding-left:16px}
+  .toc div.t{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin-bottom:10px}
+  .toc a{display:block;color:var(--mut);padding:4px 0;border-left:2px solid transparent;margin-left:-18px;padding-left:16px;font-weight:600}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  .toc a.on{color:var(--green-d);border-left-color:var(--green)}
+  /* steps */
+  .step{padding:8px 0 38px;border-bottom:1px solid var(--line);margin-bottom:30px;scroll-margin-top:78px}
+  .step:last-of-type{border-bottom:none}
+  .sh{display:flex;align-items:center;gap:12px;margin:0 0 4px}
+  .sh .n{flex:none;width:30px;height:30px;border-radius:9px;background:var(--green);color:#fff;font-weight:800;
+    font-size:15px;display:grid;place-items:center;box-shadow:0 8px 18px -10px rgba(10,153,102,.8)}
+  .sh h2{font-size:23px;letter-spacing:-.6px;margin:0;font-weight:780}
+  .step p{margin:12px 0;color:#3a342e;max-width:62ch}
+  .step p .mut{color:var(--mut)}
+  code{font-family:var(--mono);font-size:.92em;background:#f4efe9;border:1px solid var(--line);border-radius:6px;padding:1px 5px}
+  pre code{background:none;border:none;padding:0;font-size:13px}
+  /* window */
+  .win{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:16px 0;overflow:hidden;
+    box-shadow:0 24px 50px -40px rgba(60,40,20,.45)}
+  .win .bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line);background:#fbf7f3}
+  .win .bar i{width:11px;height:11px;border-radius:50%}
+  .win .bar .r{background:#ff5f57}.win .bar .y{background:#febc2e}.win .bar .g{background:#28c840}
+  .win .bar .fn{margin-left:7px;font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+  .win .bar .cp{margin-left:auto;display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--mut);
+    font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:7px;padding:3px 8px;background:#fff;transition:.12s}
+  .win .bar .cp:hover{color:var(--green-d);border-color:#cfe7dc}
+  pre{margin:0;padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.72;overflow-x:auto;tab-size:4}
+  .c{color:#a59c91;font-style:italic}.s{color:var(--amber)}.d{color:var(--green-d);font-weight:600}
+  .k{color:var(--purple)}.kk{color:var(--blue)}.nu{color:var(--blue)}.self{color:var(--mut);font-style:italic}
+  /* run result */
+  .run{display:flex;gap:10px;align-items:flex-start;background:#f3f8f5;border:1px solid #d8ece2;border-radius:11px;
+    padding:11px 14px;margin:14px 0;font-family:var(--mono);font-size:12.5px;color:#2c5446;line-height:1.6;overflow-x:auto}
+  .run .pl{color:var(--green);font-weight:800;flex:none}
+  .run b{color:var(--green-d)}
+  /* callouts */
+  .cb{border:1px solid var(--line);border-left:3px solid var(--mut);border-radius:10px;padding:13px 16px;margin:16px 0;background:var(--card);font-size:14px}
+  .cb b{color:var(--ink)}
+  .cb.tip{border-left-color:var(--green)}.cb.tip b{color:var(--green-d)}
+  .cb.warn{border-left-color:var(--amber)}.cb.warn b{color:var(--amber)}
+  .cb p{margin:0}.cb p+p{margin-top:6px}
+  .cb ul{margin:9px 0 0;padding-left:20px}
+  .cb li{margin:7px 0}
+  .cb li::marker{color:var(--mut)}
+  .cb code.bad{color:#b4452f;background:#fbefea;border-color:#ecd3cc;white-space:nowrap}
+  .cb .cmd{display:block;margin:7px 0 1px;padding:8px 11px;background:#fbf7f3;border:1px solid var(--line);
+    border-radius:8px;font-family:var(--mono);font-size:12px;line-height:1.5;white-space:pre;overflow-x:auto}
+  /* cta + footer */
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0 0}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;border-radius:999px;padding:11px 22px;transition:transform .12s}
+  .btn:hover{transform:translateY(-1px);text-decoration:none}
+  .btn.p{background:var(--green);color:#fff}.btn.g{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  footer{border-top:1px solid var(--line);margin-top:54px;padding:26px 0 50px;color:var(--mut);font-size:13px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:14px;align-items:center}footer .sp{flex:1}
+</style>
+</head>
+<body data-engine="anthropic">
+  <nav class="nav">
+    <a class="brand" href="filament-landing-page.html"><img src="pyfilament-mark-square.png" alt="pyfilament" />pyfilament</a>
+    <div class="sp"></div>
+    <a class="lnk on" href="tutorial-resilient-pipeline.html">Tutorial</a>
+    <a class="lnk" href="https://github.com/pyfilament/pyfilament">GitHub</a>
+  </nav>
+
+  <div class="wrap">
+    <header class="hero">
+      <span class="eyebrow">Advanced · ~10 min · needs an LLM key</span>
+      <h1>Summarize the web with an <em>LLM pipeline</em>.</h1>
+      <p class="lead">A follow-up to the getting-started tutorial. No web server, no extension — just a script that
+        <code>curl</code>s a page and asks a model for a structured brief. The same <code>@task</code> primitives,
+        now wrapped around a real (flaky, pricey) LLM call.</p>
+      <div class="pick">
+        <span class="lbl">Build it with:</span>
+        <div class="tabs" role="tablist" aria-label="Choose an SDK">
+          <button data-engine="anthropic" class="on">Anthropic (Claude)</button>
+          <button data-engine="openai">OpenAI</button>
+          <button data-engine="gemini">Gemini</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="build">
+      <div class="bx"><h4>What you'll build</h4>
+        <p>A CLI that turns a list of URLs into structured briefs — a <code>fetch → summarize</code> task tree
+          that's durable, cached, and visible in the dashboard.</p></div>
+      <div class="bx"><h4>What you'll learn</h4>
+        <ul>
+          <li>A typed <b>PageBrief</b> contract</li>
+          <li><b>curl</b> inside a <code>@task</code> (cache + retries + limits)</li>
+          <li>One <b>strict structured</b> LLM call</li>
+          <li>Composing the <b>tree</b> and running it</li>
+          <li>The <b>live dashboard</b></li>
+        </ul></div>
+    </div>
+  </div>
+
+  <div class="wrap shell">
+    <main class="content">
+
+      <!-- STEP 1 -->
+      <section class="step" id="s1">
+        <div class="sh"><div class="n">1</div><h2>Set up</h2></div>
+        <p>Builds on the <a href="tutorial-resilient-pipeline.html">getting-started tutorial</a> — same <code>.venv</code>,
+          <b>Redis</b>, and migrated database. Pick an SDK above, install it, set its key.</p>
+        <div class="win only anthropic">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">terminal</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="bash"># in your activated pyfilament venv
+pip install anthropic
+
+export ANTHROPIC_API_KEY="sk-ant-..."</code></pre>
+        </div>
+        <div class="win only openai">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">terminal</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="bash"># in your activated pyfilament venv
+pip install openai
+
+export OPENAI_API_KEY="sk-..."</code></pre>
+        </div>
+        <div class="win only gemini">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">terminal</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="bash"># in your activated pyfilament venv
+pip install google-genai
+
+export GEMINI_API_KEY="..."       # from aistudio.google.com/apikey</code></pre>
+        </div>
+        <p class="mut">It all goes in one file; the finished scripts are
+          <code>examples/web_analyst_{anthropic,openai,gemini}.py</code> — same pipeline, the SDK differs in one
+          function. <code>curl</code> just needs to be on your PATH.</p>
+        <div class="cb warn"><p><b>Point every process at one database — now.</b> filament reads the default
+          <code>filament.sqlite</code> relative to each process's <i>working directory</i>, and SQLite quietly creates
+          an empty one if it's missing — that's the <code class="bad">no such table: task_type</code> you'll hit when
+          the script and dashboard launch from different folders. Export an absolute path (<b>four</b> slashes) in your
+          shell profile so every process shares one DB:</p>
+          <span class="cmd">export FILAMENT_DB_URI="sqlite+aiosqlite:////ABS/PATH/TO/pyfilament/filament.sqlite"</span></div>
+      </section>
+
+      <!-- STEP 2 -->
+      <section class="step" id="s2">
+        <div class="sh"><div class="n">2</div><h2>Define the brief</h2></div>
+        <p>One Pydantic model is the contract the model fills in — and the shape the rest of the script renders.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span>.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">from pydantic import BaseModel
+
+class PageBrief(BaseModel):
+    category: str          # news | docs | product | blog | reference | other
+    title: str
+    summary: str           # 2-3 sentences
+    key_points: list[str]  # 3-5 bullets
+    audience: str          # who the page is for
+
+SYSTEM = ("Analyze the page's HTML and return a brief. Ignore nav and boilerplate; "
+          "category is one of news|docs|product|blog|reference|other.")</code></pre>
+        </div>
+      </section>
+
+      <!-- STEP 3 -->
+      <section class="step" id="s3">
+        <div class="sh"><div class="n">3</div><h2>Fetch a page with curl</h2></div>
+        <p>Wrap the download in a <code>@task</code> — the base tutorial's <code>fetch</code>, now on the real network
+          where the keywords earn their keep: <code>tries</code> rides out blips, <code>cache</code> skips
+          re-downloads, <code>rate_limit</code> stays polite, <code>timeout</code> aborts a hang.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span>.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">import asyncio
+from filament import task, get_logger
+
+@task(tries=3, delay=1, timeout=30, cache=True, cache_ttl=3600, rate_limit=2)
+async def fetch_page(url):
+    get_logger().info(f"GET {url}")               # streams to the dashboard
+    proc = await asyncio.create_subprocess_exec(
+        "curl", "-sSL", "--max-time", "20", url,
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    out, err = await proc.communicate()
+    if proc.returncode != 0:
+        raise RuntimeError(f"curl failed: {err.decode()[:200]}")
+    return out.decode("utf-8", "replace")</code></pre>
+        </div>
+        <p class="mut">Raw HTML is fine to send a model — no parser, just a truncate.</p>
+      </section>
+
+      <!-- STEP 4 -->
+      <section class="step" id="s4">
+        <div class="sh"><div class="n">4</div><h2>Summarize it with the LLM SDK</h2></div>
+        <p>The model call. <b>Structured outputs</b> validate the reply into a <code>PageBrief</code> server-side —
+          field names <i>and</i> types enforced — so you never get a list where you wanted a string.</p>
+        <div class="win only anthropic">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_anthropic.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">from anthropic import AsyncAnthropic
+client = AsyncAnthropic()                           # reads ANTHROPIC_API_KEY
+
+async def brief(url, html):
+    resp = await client.messages.parse(             # strict structured output
+        model="claude-haiku-4-5",                   # fast + cheap; supports schemas
+        max_tokens=4096, system=SYSTEM,
+        messages=[{"role": "user", "content": f"URL: {url}\n\n{html[:8000]}"}],
+        output_format=PageBrief)
+    return resp.parsed_output</code></pre>
+        </div>
+        <div class="win only openai">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_openai.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">from openai import AsyncOpenAI
+client = AsyncOpenAI()                              # reads OPENAI_API_KEY
+
+async def brief(url, html):
+    resp = await client.chat.completions.parse(     # strict structured output
+        model="gpt-4.1",
+        messages=[{"role": "system", "content": SYSTEM},
+                  {"role": "user", "content": f"URL: {url}\n\n{html[:8000]}"}],
+        response_format=PageBrief)
+    return resp.choices[0].message.parsed</code></pre>
+        </div>
+        <div class="win only gemini">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_gemini.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">import os
+from google import genai
+from google.genai import types
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+
+async def brief(url, html):
+    resp = await client.aio.models.generate_content(  # single structured call
+        model="gemini-3.1-flash-lite",              # fast + cheap
+        contents=f"URL: {url}\n\n{html[:8000]}",
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM,
+            response_mime_type="application/json",
+            response_json_schema=PageBrief.model_json_schema()))
+    return PageBrief.model_validate_json(resp.text)</code></pre>
+        </div>
+        <div class="cb tip"><p><b>Same contract, any SDK.</b> <code>brief()</code> returns a <code>PageBrief</code>
+          whichever model ran, so everything downstream is identical — the three scripts differ only here. Flip the
+          toggle to compare.</p></div>
+      </section>
+
+      <!-- STEP 5 -->
+      <section class="step" id="s5">
+        <div class="sh"><div class="n">5</div><h2>Compose the tree &amp; run it</h2></div>
+        <p>Wrap the model call in its own <code>@task</code> (so it retries and caches too); <code>analyze</code> then
+          chains <code>fetch_page → summarize</code>. Each call is a tracked child run — the same parent/child tree as
+          the base tutorial's pipeline.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span>.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">@task(tries=3, delay=2, cache=True, cache_ttl=3600)
+async def summarize(url, html):
+    return await brief(url, html)                  # the SDK call from step 4
+
+@task
+async def analyze(url):
+    html = await fetch_page(url)                   # child run #1
+    return await summarize(url, html)              # child run #2
+
+async def main():
+    for url in ["https://www.python.org", "https://news.ycombinator.com"]:
+        b = await analyze(url)
+        print(f"[{b.category}] {b.title} — {b.summary}")
+
+asyncio.run(main())</code></pre>
+        </div>
+        <div class="run"><span class="pl">▸</span><span>python web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span>.py &nbsp;→&nbsp; <b>[reference] Welcome to Python.org — The official home of the Python programming language…</b></span></div>
+        <div class="cb tip"><p><b>Everything from the base tutorial, now on a real model.</b> Retries on transient
+          <code>429/5xx</code>, identical pages served from <b>cache</b> (run it twice — the second pass pays for no
+          fetches and no tokens), fleet-wide rate limits, and a multi-step pipeline as one observable tree.</p></div>
+      </section>
+
+      <!-- STEP 6 -->
+      <section class="step" id="s6">
+        <div class="sh"><div class="n">6</div><h2>Watch it in the dashboard</h2></div>
+        <p>Every run was recorded. Start the API and UI from the base tutorial and open
+          <a href="http://localhost:3001">localhost:3001</a>.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">terminal</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="bash">uvicorn filament.api.main:app --port 5006        # API
+cd ui &amp;&amp; npm install &amp;&amp; npm run dev               # UI on http://localhost:3001</code></pre>
+        </div>
+        <div class="cb warn"><p><b>The API is a separate process — same DB rule.</b> It reads
+          <code>FILAMENT_DB_URI</code> too, so launch it with the same absolute path (step 1) or it opens its own empty
+          <code>filament.sqlite</code> and every query 404s. Port <code>:5006</code> taken? An old API is holding it —
+          <code>lsof -nP -i :5006</code>, then <code>kill &lt;PID&gt;</code>.</p></div>
+        <p>Each <code>analyze → fetch_page / summarize</code> tree is there — states moving
+          <code>created → running → success</code>, the <code>get_logger()</code> lines to replay, and a cache hit
+          that turns a run green without running its body.</p>
+
+        <div class="cta">
+          <a class="btn g" href="https://github.com/pyfilament/pyfilament">View on GitHub</a>
+        </div>
+      </section>
+
+    </main>
+
+    <aside class="toc">
+      <div class="t">Steps</div>
+      <a href="#s1">1 · Set up</a>
+      <a href="#s2">2 · The brief</a>
+      <a href="#s3">3 · Fetch (curl)</a>
+      <a href="#s4">4 · Summarize</a>
+      <a href="#s5">5 · The tree</a>
+      <a href="#s6">6 · Dashboard</a>
+    </aside>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <span>pyfilament — lightweight, durable task framework.</span>
+      <span class="sp"></span>
+      <a href="tutorial-resilient-pipeline.html">Tutorial</a>
+      <a href="https://github.com/pyfilament/pyfilament">GitHub</a>
+    </div>
+  </footer>
+
+<script>
+(function(){
+  /* SDK picker — toggles the body[data-engine] attribute the CSS keys off */
+  document.querySelectorAll('.tabs button').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.body.setAttribute('data-engine', btn.dataset.engine);
+      document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on', b===btn);});
+    });
+  });
+  /* python syntax highlighter */
+  var esc=function(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var KW="async|await|def|return|yield|for|in|while|if|elif|else|with|as|import|from|raise|try|except|finally|class|lambda|not|and|or|is|pass|global|nonlocal|del|assert|break|continue";
+  var re=new RegExp(
+    "(#[^\\n]*)"
+    +"|([rbfuRBFU]*\"(?:\\\\.|[^\"\\\\])*\"|[rbfuRBFU]*'(?:\\\\.|[^'\\\\])*')"
+    +"|(@[A-Za-z_][\\w.]*)"
+    +"|\\b("+KW+")\\b"
+    +"|\\b(True|False|None)\\b"
+    +"|\\b(self|cls)\\b"
+    +"|\\b(\\d+\\.?\\d*)\\b","g");
+  function hlpy(src){
+    var out="",last=0,m;
+    while((m=re.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      var cls=m[1]?"c":m[2]?"s":m[3]?"d":m[4]?"k":m[5]?"kk":m[6]?"self":"nu";
+      out+='<span class="'+cls+'">'+esc(m[0])+'</span>';
+      last=m.index+m[0].length;
+    }
+    return out+esc(src.slice(last));
+  }
+  function hlsh(src){ /* shell: only color # comments */
+    return esc(src).replace(/(^|\n)(\s*#[^\n]*)/g,function(_,a,b){return a+'<span class="c">'+b+'</span>';});
+  }
+  document.querySelectorAll('code.py').forEach(function(c){c.dataset.raw=c.textContent;c.innerHTML=hlpy(c.textContent);});
+  document.querySelectorAll('code.bash').forEach(function(c){c.dataset.raw=c.textContent;c.innerHTML=hlsh(c.textContent);});
+  document.querySelectorAll('[data-cp]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var code=btn.closest('.win').querySelector('code');
+      navigator.clipboard.writeText(code.dataset.raw||code.textContent).then(function(){
+        var t=btn.textContent;btn.textContent='copied';setTimeout(function(){btn.textContent=t;},1200);
+      });
+    });
+  });
+  /* scrollspy */
+  var links={};document.querySelectorAll('.toc a').forEach(function(a){links[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){
+      Object.values(links).forEach(function(l){l.classList.remove('on');});
+      if(links[e.target.id])links[e.target.id].classList.add('on');
+    }});
+  },{rootMargin:"-40% 0px -55% 0px"});
+  document.querySelectorAll('.step').forEach(function(s){obs.observe(s);});
+})();
+</script>
+</body>
+</html>
