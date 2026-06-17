@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>pyfilament — features</title>
+<style>
+  :root{
+    --paper:#faf9f6;--ink:#161311;--mut:#857d74;--line:#eae6df;--card:#fffdfb;
+    --green:#0a9966;--green-d:#07835c;--amber:#c2722f;--blue:#2b7fb8;--purple:#9a5cc7;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px}
+  a{color:var(--green-d);text-decoration:none}
+  a:hover{text-decoration:underline}
+  /* ── nav ── */
+  .nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;
+    padding:13px 26px;background:rgba(250,249,246,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+  .nav .brand img{height:26px;width:26px;display:block;border-radius:6px}
+  .nav .sp{flex:1}
+  .nav a.lnk{color:var(--mut);font-weight:600;font-size:14.5px}
+  .nav a.lnk:hover{color:var(--ink);text-decoration:none}
+  .nav a.lnk.on{color:var(--green-d)}
+  /* ── layout ── */
+  .wrap{max-width:880px;margin:0 auto;padding:0 26px}
+  .hero{padding:62px 0 26px}
+  .eyebrow{display:inline-block;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--green-d);background:#eaf6f0;border:1px solid #d4ece1;border-radius:999px;padding:5px 12px;margin-bottom:18px}
+  h1{font-size:clamp(30px,5.4vw,44px);line-height:1.07;letter-spacing:-1.4px;font-weight:820;margin:0}
+  h1 em{font-style:normal;color:var(--green-d)}
+  .lead{font-size:18px;color:var(--mut);margin:16px 0 0;max-width:60ch}
+  h2{font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--mut);
+    margin:54px 0 4px;font-weight:700}
+  .sct-tag{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:22px}
+  .sct-tag h2{margin:0}
+  .sct-tag .nx{color:var(--ink);font-weight:700;font-size:15px;font-family:var(--sans);text-transform:none;letter-spacing:0}
+  /* ── code window ── */
+  .win{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:22px 0;overflow:hidden;
+    box-shadow:0 24px 50px -40px rgba(60,40,20,.45)}
+  .win .bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line);background:#fbf7f3}
+  .win .bar i{width:11px;height:11px;border-radius:50%}
+  .win .bar .r{background:#ff5f57}.win .bar .y{background:#febc2e}.win .bar .g{background:#28c840}
+  .win .bar .fn{margin-left:7px;font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+  .win .bar .cp{margin-left:auto;display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--mut);
+    font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:7px;padding:3px 8px;background:#fff;transition:.12s}
+  .win .bar .cp:hover{color:var(--green-d);border-color:#cfe7dc}
+  pre{margin:0;padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.72;overflow-x:auto;tab-size:4}
+  code{font-family:var(--mono)}
+  .c{color:#a59c91;font-style:italic}.s{color:var(--amber)}.d{color:var(--green-d);font-weight:600}
+  .k{color:var(--purple)}.kk{color:var(--blue)}.nu{color:var(--blue)}.self{color:var(--mut);font-style:italic}
+  /* ── feature cards ── */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:17px 18px;transition:.14s}
+  .card:hover{border-color:#d8d1c7;transform:translateY(-1px);box-shadow:0 18px 40px -34px rgba(60,40,20,.5)}
+  .card .ic{font-size:18px;line-height:1}
+  .card h3{margin:9px 0 5px;font-size:16px;font-weight:740;letter-spacing:-.2px}
+  .card p{margin:0 0 11px;color:var(--mut);font-size:14px;line-height:1.55}
+  .chip{display:inline-block;font-family:var(--mono);font-size:12px;color:var(--ink);background:#f4efe9;
+    border:1px solid var(--line);border-radius:7px;padding:3px 8px;white-space:nowrap}
+  .chip b{color:var(--green-d);font-weight:700}
+  /* ── states row ── */
+  .states{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 2px}
+  .state{font-family:var(--mono);font-size:12.5px;padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--mut)}
+  .state.gd{color:var(--green-d);border-color:#cfe7dc;background:#eef8f2}
+  .state.bd{color:#b4452f;border-color:#ecd3cc;background:#fbefea}
+  /* ── callout ── */
+  .cb{border:1px solid var(--line);border-left:3px solid var(--mut);border-radius:10px;padding:14px 16px;margin:20px 0;background:var(--card);font-size:14.5px}
+  .cb.ok{border-left-color:var(--green)}.cb.ok b{color:var(--green-d)}
+  .cb p{margin:0}.cb p+p{margin-top:7px}
+  .req{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .req .it{flex:1;min-width:180px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
+  .req .it b{font-size:14.5px}.req .it span{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+  /* ── cta ── */
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin:30px 0 0}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;border-radius:999px;padding:11px 22px;transition:transform .12s}
+  .btn:hover{transform:translateY(-1px);text-decoration:none}
+  .btn.p{background:var(--green);color:#fff}.btn.g{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  footer{border-top:1px solid var(--line);margin-top:64px;padding:26px 0 50px;color:var(--mut);font-size:13px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  footer .sp{flex:1}
+</style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="filament-landing-page.html"><img src="pyfilament-mark-square.png" alt="pyfilament" />pyfilament</a>
+    <div class="sp"></div>
+    <a class="lnk on" href="features.html">Features</a>
+    <a class="lnk" href="tutorial.html">Tutorial</a>
+    <a class="lnk" href="https://github.com/pyfilament/pyfilament">GitHub</a>
+  </nav>
+
+  <div class="wrap">
+    <header class="hero">
+      <span class="eyebrow">Feature tour</span>
+      <h1>Everything <em>@task</em> gives you.</h1>
+      <p class="lead">pyfilament turns a plain <code>async</code> function into a durable, observable task.
+        Every capability below is one keyword away — no boilerplate, no separate config.</p>
+    </header>
+
+    <!-- mental model -->
+    <div class="sct-tag"><h2>The mental model</h2><span class="nx">Decorate · call · await</span></div>
+    <p style="margin-top:-6px;color:var(--mut)">Add <code>@task</code> to an async function. Calling it returns a <em>run</em>;
+      awaiting the run executes it — with whatever reliability you asked for baked in.</p>
+    <div class="win">
+      <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">tasks.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">from filament import task
+
+@task(tries=3, timeout=30, cache=True)
+async def crunch(x):
+    return await heavy(x)
+
+run = crunch(42)        # calling a task returns a run
+result = await run      # awaiting the run executes it</code></pre>
+    </div>
+
+    <!-- reliability -->
+    <div class="sct-tag"><h2>Reliability</h2><span class="nx">Survive flaky reality</span></div>
+    <div class="grid">
+      <div class="card"><div class="ic">🔁</div><h3>Retries with backoff</h3>
+        <p>Re-run on failure with exponential backoff and jitter — no retry loop to write.</p>
+        <span class="chip"><b>@task</b>(tries=5, delay=1, backoff_base=2)</span></div>
+      <div class="card"><div class="ic">🎯</div><h3>Selective retries</h3>
+        <p>Retry only the errors worth retrying; fail fast on the ones that aren't.</p>
+        <span class="chip">retry_exceptions=[…], no_retry_exceptions=[…]</span></div>
+      <div class="card"><div class="ic">⏱️</div><h3>Timeouts</h3>
+        <p>Cap how long a run may take. Overruns are aborted and marked <code>timeout</code>.</p>
+        <span class="chip"><b>@task</b>(timeout=30)</span></div>
+      <div class="card"><div class="ic">💾</div><h3>Result caching</h3>
+        <p>Skip the body and reuse the stored result, with an optional TTL and forced refresh.</p>
+        <span class="chip"><b>@task</b>(cache=True, cache_ttl=3600)</span></div>
+      <div class="card"><div class="ic">🛑</div><h3>Cancellation</h3>
+        <p>Cancel a run cooperatively while it's in flight; children stop with it.</p>
+        <span class="chip">run.cancel()</span></div>
+      <div class="card"><div class="ic">🧹</div><h3>Graceful shutdown</h3>
+        <p>Signal a worker to drain its current work and exit cleanly — no dropped tasks.</p>
+        <span class="chip">serve(shutdown_event)</span></div>
+    </div>
+
+    <!-- flow control -->
+    <div class="sct-tag"><h2>Flow control</h2><span class="nx">Be a good citizen</span></div>
+    <div class="grid">
+      <div class="card"><div class="ic">🚦</div><h3>Rate limiting</h3>
+        <p>Cap executions per second across every worker, via a shared token bucket. Perfect for third-party APIs.</p>
+        <span class="chip"><b>@task</b>(rate_limit=5)</span></div>
+      <div class="card"><div class="ic">⚖️</div><h3>Concurrency limits</h3>
+        <p>Bound how many runs happen at once, using a distributed semaphore.</p>
+        <span class="chip"><b>@task</b>(max_concurrent=10)</span></div>
+    </div>
+
+    <!-- composition -->
+    <div class="sct-tag"><h2>Composition &amp; scale</h2><span class="nx">From one function to many workers</span></div>
+    <div class="grid">
+      <div class="card"><div class="ic">🌳</div><h3>Subtasks &amp; trees</h3>
+        <p>Call tasks from inside tasks. Parent/child links are tracked so you can see the whole tree.</p>
+        <span class="chip">result = await child(x)</span></div>
+      <div class="card"><div class="ic">📡</div><h3>Distributed queue &amp; workers</h3>
+        <p>Enqueue work to Redis and process it on any number of worker processes or machines.</p>
+        <span class="chip">await job.request(x) · await job.serve()</span></div>
+    </div>
+
+    <!-- observability -->
+    <div class="sct-tag"><h2>Observability</h2><span class="nx">Tasks you can actually see</span></div>
+    <div class="grid">
+      <div class="card"><div class="ic">📈</div><h3>State timeline</h3>
+        <p>Every transition is recorded with timestamps — when it ran, retried, finished or failed.</p>
+        <span class="chip">created → running → success</span></div>
+      <div class="card"><div class="ic">📝</div><h3>Structured logging</h3>
+        <p>Per-run logs you can stream live in the dashboard. Just grab the task logger.</p>
+        <span class="chip">log = get_logger()</span></div>
+      <div class="card"><div class="ic">🔍</div><h3>Args &amp; result capture</h3>
+        <p>Inputs and outputs are stored for inspection — and redactable when they're sensitive.</p>
+        <span class="chip">is_redact_input, is_redact_output</span></div>
+      <div class="card"><div class="ic">🖥️</div><h3>Web dashboard</h3>
+        <p>A FastAPI + GraphQL backend and a React UI to watch runs, trees and logs in real time.</p>
+        <span class="chip">uvicorn · GraphQL · React</span></div>
+    </div>
+
+    <p style="color:var(--mut);margin-top:24px">Every run moves through a small, well-defined set of states:</p>
+    <div class="states">
+      <span class="state">created</span><span class="state">running</span><span class="state">retrying</span>
+      <span class="state gd">success</span><span class="state gd">cached</span>
+      <span class="state bd">failure</span><span class="state bd">timeout</span><span class="state bd">cancelled</span>
+    </div>
+
+    <!-- cheat sheet -->
+    <div class="sct-tag"><h2>One decorator, everything on</h2><span class="nx">The cheat sheet</span></div>
+    <div class="win">
+      <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">cheatsheet.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">@task(
+    tries=5, delay=1, backoff_base=2,    # retry with backoff + jitter
+    timeout=30,                          # abort slow runs
+    cache=True, cache_ttl=3600,          # reuse results, expire after 1h
+    rate_limit=5,                        # at most 5 / second, fleet-wide
+    max_concurrent=10,                   # at most 10 in flight at once
+    is_redact_input=True,                # keep sensitive args out of storage
+)
+async def crunch(x):
+    return await heavy(x)</code></pre>
+    </div>
+
+    <!-- requirements -->
+    <div class="sct-tag"><h2>What you need</h2><span class="nx">A small, standard stack</span></div>
+    <div class="cb ok">
+      <p>pyfilament is <b>durable and observable by design</b>, so it leans on a tiny bit of infrastructure.
+        The tutorial gets you from zero to a running task — including the dashboard — in about ten minutes.</p>
+    </div>
+    <div class="req">
+      <div class="it"><b>Python 3.14+</b><span>The library targets the latest Python.</span></div>
+      <div class="it"><b>Redis</b><span>Powers caching, queues, rate limits &amp; locks. One Docker command.</span></div>
+      <div class="it"><b>A database</b><span>SQLite by default (zero setup); Postgres for production.</span></div>
+    </div>
+
+    <div class="cta">
+      <a class="btn p" href="tutorial.html">Start the tutorial →</a>
+      <a class="btn g" href="https://github.com/pyfilament/pyfilament">View on GitHub</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <span>pyfilament — lightweight, durable task framework.</span>
+      <span class="sp"></span>
+      <a href="features.html">Features</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a href="https://github.com/pyfilament/pyfilament">GitHub</a>
+    </div>
+  </footer>
+
+<script>
+/* tiny Python syntax highlighter — robust left-to-right tokenizer */
+(function(){
+  var esc=function(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var KW="async|await|def|return|yield|for|in|while|if|elif|else|with|as|import|from|raise|try|except|finally|class|lambda|not|and|or|is|pass|global|nonlocal|del|assert|break|continue";
+  var re=new RegExp(
+    "(#[^\\n]*)"                                                   /*1 comment*/
+    +"|([rbfuRBFU]*\"(?:\\\\.|[^\"\\\\])*\"|[rbfuRBFU]*'(?:\\\\.|[^'\\\\])*')" /*2 string*/
+    +"|(@[A-Za-z_][\\w.]*)"                                        /*3 decorator*/
+    +"|\\b("+KW+")\\b"                                             /*4 keyword*/
+    +"|\\b(True|False|None)\\b"                                    /*5 literal*/
+    +"|\\b(self|cls)\\b"                                           /*6 self*/
+    +"|\\b(\\d+\\.?\\d*)\\b","g");                                 /*7 number*/
+  function hl(src){
+    var out="",last=0,m;
+    while((m=re.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      var cls=m[1]?"c":m[2]?"s":m[3]?"d":m[4]?"k":m[5]?"kk":m[6]?"self":"nu";
+      out+='<span class="'+cls+'">'+esc(m[0])+'</span>';
+      last=m.index+m[0].length;
+    }
+    out+=esc(src.slice(last));
+    return out;
+  }
+  document.querySelectorAll('code.py').forEach(function(c){
+    c.dataset.raw=c.textContent;
+    c.innerHTML=hl(c.textContent);
+  });
+  document.querySelectorAll('[data-cp]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var code=btn.closest('.win').querySelector('code');
+      navigator.clipboard.writeText(code.dataset.raw||code.textContent).then(function(){
+        var t=btn.textContent;btn.textContent='copied';setTimeout(function(){btn.textContent=t;},1200);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

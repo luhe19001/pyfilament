@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>pyfilament — get started</title>
+<style>
+  :root{
+    --paper:#faf9f6;--ink:#161311;--mut:#857d74;--line:#eae6df;--card:#fffdfb;
+    --green:#0a9966;--green-d:#07835c;--amber:#c2722f;--blue:#2b7fb8;--purple:#9a5cc7;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.62;font-size:16px}
+  a{color:var(--green-d);text-decoration:none}a:hover{text-decoration:underline}
+  /* nav */
+  .nav{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:18px;
+    padding:13px 26px;background:rgba(250,249,246,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+  .nav .brand img{height:26px;width:26px;display:block;border-radius:6px}
+  .nav .sp{flex:1}
+  .nav a.lnk{color:var(--mut);font-weight:600;font-size:14.5px}.nav a.lnk:hover{color:var(--ink);text-decoration:none}
+  .nav a.lnk.on{color:var(--green-d)}
+  /* hero */
+  .wrap{max-width:1040px;margin:0 auto;padding:0 26px}
+  .hero{padding:58px 0 18px;max-width:680px}
+  .eyebrow{display:inline-block;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--green-d);background:#eaf6f0;border:1px solid #d4ece1;border-radius:999px;padding:5px 12px;margin-bottom:18px}
+  h1{font-size:clamp(30px,5.4vw,44px);line-height:1.07;letter-spacing:-1.4px;font-weight:820;margin:0}
+  h1 em{font-style:normal;color:var(--green-d)}
+  .lead{font-size:18px;color:var(--mut);margin:16px 0 0}
+  /* build box */
+  .build{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0 6px}
+  @media(max-width:720px){.build{grid-template-columns:1fr}}
+  .build .bx{border:1px solid var(--line);border-radius:13px;padding:16px 18px;background:var(--card)}
+  .build .bx h4{margin:0 0 8px;font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+  .build .bx p{margin:0;font-size:14.5px;color:var(--ink)}
+  .build .bx ul{margin:0;padding-left:18px}.build .bx li{font-size:14.5px;margin:4px 0;color:var(--ink)}
+  .build .bx li b{font-weight:680}
+  /* shell layout: content + sticky toc */
+  .shell{display:grid;grid-template-columns:minmax(0,1fr) 196px;gap:46px;padding:34px 26px 0}
+  @media(max-width:880px){.shell{grid-template-columns:1fr;gap:0}.toc{display:none}}
+  .toc{position:sticky;top:74px;align-self:start;font-size:13.5px;border-left:1px solid var(--line);padding-left:16px}
+  .toc div.t{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin-bottom:10px}
+  .toc a{display:block;color:var(--mut);padding:4px 0;border-left:2px solid transparent;margin-left:-18px;padding-left:16px;font-weight:600}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  .toc a.on{color:var(--green-d);border-left-color:var(--green)}
+  /* steps */
+  .step{padding:8px 0 38px;border-bottom:1px solid var(--line);margin-bottom:30px;scroll-margin-top:78px}
+  .step:last-of-type{border-bottom:none}
+  .sh{display:flex;align-items:center;gap:12px;margin:0 0 4px}
+  .sh .n{flex:none;width:30px;height:30px;border-radius:9px;background:var(--green);color:#fff;font-weight:800;
+    font-size:15px;display:grid;place-items:center;box-shadow:0 8px 18px -10px rgba(10,153,102,.8)}
+  .sh h2{font-size:23px;letter-spacing:-.6px;margin:0;font-weight:780}
+  .step p{margin:12px 0;color:#3a342e;max-width:62ch}
+  .step p .mut{color:var(--mut)}
+  code{font-family:var(--mono);font-size:.92em;background:#f4efe9;border:1px solid var(--line);border-radius:6px;padding:1px 5px}
+  pre code{background:none;border:none;padding:0;font-size:13px}
+  /* window */
+  .win{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:16px 0;overflow:hidden;
+    box-shadow:0 24px 50px -40px rgba(60,40,20,.45)}
+  .win .bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line);background:#fbf7f3}
+  .win .bar i{width:11px;height:11px;border-radius:50%}
+  .win .bar .r{background:#ff5f57}.win .bar .y{background:#febc2e}.win .bar .g{background:#28c840}
+  .win .bar .fn{margin-left:7px;font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+  .win .bar .cp{margin-left:auto;display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--mut);
+    font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:7px;padding:3px 8px;background:#fff;transition:.12s}
+  .win .bar .cp:hover{color:var(--green-d);border-color:#cfe7dc}
+  pre{margin:0;padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.72;overflow-x:auto;tab-size:4}
+  .c{color:#a59c91;font-style:italic}.s{color:var(--amber)}.d{color:var(--green-d);font-weight:600}
+  .k{color:var(--purple)}.kk{color:var(--blue)}.nu{color:var(--blue)}.self{color:var(--mut);font-style:italic}
+  /* run result */
+  .run{display:flex;gap:10px;align-items:flex-start;background:#f3f8f5;border:1px solid #d8ece2;border-radius:11px;
+    padding:11px 14px;margin:14px 0;font-family:var(--mono);font-size:12.5px;color:#2c5446;line-height:1.6;overflow-x:auto}
+  .run .pl{color:var(--green);font-weight:800;flex:none}
+  .run b{color:var(--green-d)}
+  /* callouts */
+  .cb{border:1px solid var(--line);border-left:3px solid var(--mut);border-radius:10px;padding:13px 16px;margin:16px 0;background:var(--card);font-size:14px}
+  .cb b{color:var(--ink)}
+  .cb.tip{border-left-color:var(--green)}.cb.tip b{color:var(--green-d)}
+  .cb.warn{border-left-color:var(--amber)}.cb.warn b{color:var(--amber)}
+  .cb p{margin:0}.cb p+p{margin-top:6px}
+  .cb ul{margin:9px 0 0;padding-left:20px}
+  .cb li{margin:7px 0}
+  .cb li::marker{color:var(--mut)}
+  .cb code.bad{color:#b4452f;background:#fbefea;border-color:#ecd3cc;white-space:nowrap}
+  .cb .cmd{display:block;margin:7px 0 1px;padding:8px 11px;background:#fbf7f3;border:1px solid var(--line);
+    border-radius:8px;font-family:var(--mono);font-size:12px;line-height:1.5;white-space:pre;overflow-x:auto}
+  /* soon */
+  .soon{border:1px dashed #d8d1c7;border-radius:14px;padding:22px 22px;margin:18px 0;background:repeating-linear-gradient(135deg,#fffdfb,#fffdfb 12px,#faf7f2 12px,#faf7f2 24px)}
+  .soon .tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#fff;margin-bottom:10px}
+  .soon h3{margin:0 0 6px;font-size:19px;letter-spacing:-.4px}
+  .soon ul{margin:10px 0 0;padding-left:18px;color:#3a342e}.soon li{margin:5px 0;font-size:14.5px}
+  /* cta + footer */
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0 0}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;border-radius:999px;padding:11px 22px;transition:transform .12s}
+  .btn:hover{transform:translateY(-1px);text-decoration:none}
+  .btn.p{background:var(--green);color:#fff}.btn.g{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  footer{border-top:1px solid var(--line);margin-top:54px;padding:26px 0 50px;color:var(--mut);font-size:13px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:14px;align-items:center}footer .sp{flex:1}
+</style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="filament-landing-page.html"><img src="pyfilament-mark-square.png" alt="pyfilament" />pyfilament</a>
+    <div class="sp"></div>
+    <a class="lnk" href="features.html">Features</a>
+    <a class="lnk on" href="tutorial.html">Tutorial</a>
+    <a class="lnk" href="https://github.com/pyfilament/pyfilament">GitHub</a>
+  </nav>
+
+  <div class="wrap">
+    <header class="hero">
+      <span class="eyebrow">Get started · ~10 min · no LLM needed</span>
+      <h1>Build a <em>resilient pipeline</em> with pyfilament.</h1>
+      <p class="lead">We'll fetch and process a batch of web pages — surviving flaky networks, skipping repeated
+        work, staying polite to servers, and watching it all live in a dashboard. Copy each block as you go.</p>
+    </header>
+
+    <div class="build">
+      <div class="bx"><h4>What you'll build</h4>
+        <p>A small page-fetching pipeline: <code>fetch → process → pipeline</code>, hardened one keyword at a time,
+          then scaled out across worker processes.</p></div>
+      <div class="bx"><h4>What you'll learn</h4>
+        <ul>
+          <li><b>Retries &amp; timeouts</b> for flaky work</li>
+          <li><b>Caching</b> to skip repeated work</li>
+          <li><b>Rate &amp; concurrency limits</b></li>
+          <li><b>Subtasks</b> and <b>worker queues</b></li>
+          <li>The <b>live dashboard</b></li>
+        </ul></div>
+    </div>
+  </div>
+
+  <div class="wrap shell">
+    <main class="content">
+
+      <!-- STEP 1 -->
+      <section class="step" id="s1">
+        <div class="sh"><div class="n">1</div><h2>Get set up</h2></div>
+        <p>pyfilament is durable and observable by design, so it uses <b>Redis</b> (for caching, queues and limits)
+          and a <b>database</b> (SQLite by default). The quickest start is to clone the repo — you also get the
+          dashboard UI and the database migrations.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">terminal</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="bash"># 1. clone the project (needs Python 3.14+)
+git clone https://github.com/pyfilament/pyfilament
+cd pyfilament
+
+# 2. create & activate a virtualenv — use this SAME env for every step
+python3.14 -m venv .venv
+source .venv/bin/activate
+
+# 3. install pyfilament + the SQLite driver
+pip install -e . aiosqlite
+
+# 4. start Redis  (Docker Desktop must be running first; no Docker?
+#    brew install redis && brew services start redis)
+docker run -d -p 6379:6379 redis
+
+# 5. create the database tables (writes ./filament.sqlite)
+alembic upgrade head</code></pre>
+        </div>
+        <p class="mut">Run every step from this terminal — activated <code>.venv</code>, inside <code>pyfilament/</code> —
+          so Python, Redis and the database stay in sync.</p>
+        <div class="cb warn"><p><b>Two errors beginners hit here</b>, both from drifting out of that setup:</p>
+          <ul>
+            <li><code class="bad">No module named 'filament.db'</code> — wrong environment; re-run
+              <code>source .venv/bin/activate</code>.</li>
+            <li><code class="bad">no such table: task_type</code> — wrong folder; stay in <code>pyfilament/</code>,
+              or set the DB path (note the <b>four</b> slashes):
+              <span class="cmd">export FILAMENT_DB_URI="sqlite+aiosqlite:////path/to/pyfilament/filament.sqlite"</span></li>
+          </ul></div>
+        <div class="cb tip"><p><b>Already have a project?</b> <code>pip install pyfilament</code> drops the library
+          into any app — just bring your own Redis and a migrated database.</p></div>
+      </section>
+
+      <!-- STEP 2 -->
+      <section class="step" id="s2">
+        <div class="sh"><div class="n">2</div><h2>Your first task</h2></div>
+        <p>Add <code>@task</code> to any <code>async</code> function. Calling it returns a <em>run</em>; awaiting
+          the run executes it. That's the whole API. Save this as <code>app.py</code> in the <code>pyfilament/</code>
+          folder and run it there.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">import asyncio
+from filament import task
+
+@task
+async def hello(name):
+    return f"hello, {name}"
+
+print(asyncio.run(hello("filament")))</code></pre>
+        </div>
+        <div class="run"><span class="pl">▸</span><span>python app.py&nbsp; → &nbsp;<b>hello, filament</b></span></div>
+        <p class="mut">Nothing exotic yet — but that run was already recorded to the database. We'll see it in Step 8.</p>
+      </section>
+
+      <!-- STEP 3 -->
+      <section class="step" id="s3">
+        <div class="sh"><div class="n">3</div><h2>Survive a flaky network</h2></div>
+        <p>Real fetches fail and hang. Add <code>tries</code> for automatic retries (with exponential backoff and
+          jitter) and <code>timeout</code> to abort a run that overruns. <code>get_logger()</code> gives you per-run
+          logs that stream to the <b>dashboard</b> (Step 8) — not your console.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">import asyncio
+from filament import task, get_logger
+
+attempts = 0
+
+@task(tries=4, delay=0.5, timeout=10)
+async def fetch(url):
+    global attempts
+    attempts += 1
+    get_logger().info(f"GET {url} (attempt {attempts})")
+    await asyncio.sleep(0.2)               # network latency
+    if attempts &lt; 3:                       # fail twice, then recover
+        raise ConnectionError("temporary failure")
+    return f"&lt;html&gt;{url}&lt;/html&gt;"
+
+print(asyncio.run(fetch("https://example.com")))</code></pre>
+        </div>
+        <div class="run"><span class="pl">▸</span><span>fails twice, retries, recovers on attempt 3 &nbsp;→&nbsp; <b>&lt;html&gt;https://example.com&lt;/html&gt;</b></span></div>
+        <p class="mut">We made the failures deterministic so the demo always succeeds; real code just raises real
+          exceptions. Retry only some of them with <code>retry_exceptions=[...]</code> / <code>no_retry_exceptions=[...]</code>.</p>
+      </section>
+
+      <!-- STEP 4 -->
+      <section class="step" id="s4">
+        <div class="sh"><div class="n">4</div><h2>Don't fetch the same thing twice</h2></div>
+        <p>Add <code>cache=True</code> and pyfilament stores the result. The next call with the same arguments
+          <b>skips the body entirely</b> and returns the stored value (until <code>cache_ttl</code> expires).</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">calls = 0
+
+@task(tries=4, delay=0.5, timeout=10, cache=True, cache_ttl=3600)
+async def fetch(url):
+    global calls
+    calls += 1                              # count real executions of the body
+    await asyncio.sleep(0.2)
+    return f"&lt;html&gt;{url}&lt;/html&gt;"
+
+async def main():
+    a = await fetch("https://example.com", refresh_cache=True)  # force one fresh run
+    b = await fetch("https://example.com")                      # served from cache
+    print("same result:", a == b, "| body ran", calls, "time(s)")
+
+asyncio.run(main())</code></pre>
+        </div>
+        <div class="run"><span class="pl">▸</span><span>same result: <b>True</b> | body ran <b>1</b> time(s)</span></div>
+        <p class="mut">The cache lives in Redis, so it survives restarts — that's why we pass
+          <code>refresh_cache=True</code> on the first call to guarantee a fresh run for this demo.</p>
+      </section>
+
+      <!-- STEP 5 -->
+      <section class="step" id="s5">
+        <div class="sh"><div class="n">5</div><h2>Be a good citizen</h2></div>
+        <p>Hammering a server gets you blocked. <code>rate_limit</code> caps executions per second and
+          <code>max_concurrent</code> caps how many run at once — and both are enforced <b>across every worker</b>,
+          not just one process.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">@task(
+    tries=4, delay=0.5, timeout=10,
+    cache=True, cache_ttl=3600,
+    rate_limit=5,            # at most 5 fetches / second, fleet-wide
+    max_concurrent=10,       # at most 10 in flight at once
+)
+async def fetch(url):
+    ...</code></pre>
+        </div>
+        <p class="mut">No matter how many callers — or workers (Step 7) — pile on, <code>fetch</code> stays within these limits.</p>
+      </section>
+
+      <!-- STEP 6 -->
+      <section class="step" id="s6">
+        <div class="sh"><div class="n">6</div><h2>Compose a pipeline from subtasks</h2></div>
+        <p>Tasks can call other tasks. Each call is its own tracked run, so you get a clean parent → child <b>tree</b>
+          you can inspect later. Add these to your <code>app.py</code> <b>alongside <code>fetch</code> from the previous
+          steps</b> — a <code>pipeline</code> walks the URLs, and each <code>process</code> fetches then counts words.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">app.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">@task
+async def word_count(html):
+    return len(html.split())
+
+@task
+async def process(url):
+    page = await fetch(url)              # subtask 1
+    words = await word_count(page)       # subtask 2
+    return {"url": url, "words": words}
+
+@task
+async def pipeline(urls):
+    results = []
+    for url in urls:                     # one at a time = a clean tree
+        results.append(await process(url))
+    return results
+
+print(asyncio.run(pipeline(["https://a.com", "https://b.com"])))</code></pre>
+        </div>
+        <div class="run"><span class="pl">▸</span><span>[{'url': 'https://a.com', 'words': 1}, {'url': 'https://b.com', 'words': 1}]</span></div>
+        <div class="cb tip"><p><b>Want them in parallel?</b> Don't reach for <code>asyncio.gather</code> here —
+          hand the URLs to <b>workers</b> instead. That's exactly what the queue in the next step is for.</p></div>
+      </section>
+
+      <!-- STEP 7 -->
+      <section class="step" id="s7">
+        <div class="sh"><div class="n">7</div><h2>Scale out with workers</h2></div>
+        <p>Move <code>fetch</code> off the caller and onto a queue. <code>.request(...)</code> enqueues a job to Redis
+          and hands you back a run; a separate worker process pulls jobs with <code>.serve()</code> and executes them.
+          Split into <b>three files in the same folder</b>: shared task definitions in <code>tasks.py</code> (no
+          <code>asyncio.run</code> at the bottom), which both the worker and producer import.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">tasks.py &nbsp;— shared definitions</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">import asyncio
+from filament import task, get_logger
+
+@task(tries=4, delay=0.5, timeout=10)
+async def fetch(url):
+    get_logger().info(f"GET {url}")
+    await asyncio.sleep(0.2)
+    return f"&lt;html&gt;{url}&lt;/html&gt;"</code></pre>
+        </div>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">worker.py &nbsp;— terminal 1</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">import anyio
+from tasks import fetch
+
+anyio.run(fetch.serve)        # pull fetch jobs off the queue, forever</code></pre>
+        </div>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">producer.py &nbsp;— terminal 2</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">import anyio
+from tasks import fetch
+
+async def main():
+    run = await fetch.request("https://example.com")   # enqueue
+    print("worker returned:", await run)               # await the result
+
+anyio.run(main)</code></pre>
+        </div>
+        <div class="run"><span class="pl">▸</span><span>terminal 2 prints &nbsp;<b>worker returned: &lt;html&gt;https://example.com&lt;/html&gt;</b> &nbsp;(terminal 1 keeps serving)</span></div>
+        <p class="mut">Run <b>both commands from the folder holding these three files</b>, or Python can't
+          <code>import tasks</code>. Start as many <code>worker.py</code> processes (or machines) as you like — the
+          queue, rate limits and concurrency caps coordinate them all. Stop a worker cleanly by passing an
+          <code>anyio.Event</code> to <code>serve()</code>.</p>
+      </section>
+
+      <!-- STEP 8 -->
+      <section class="step" id="s8">
+        <div class="sh"><div class="n">8</div><h2>Watch it live in the dashboard</h2></div>
+        <p>Everything you just ran was recorded. Start the API and the UI to see task types, every run, the state
+          timeline, the subtask tree and streaming logs.</p>
+        <div class="win">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">terminal</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="bash"># API — serves data on port 5006
+uvicorn filament.api.main:app --port 5006
+
+# UI — in another terminal, opens on http://localhost:3001
+cd ui &amp;&amp; npm install &amp;&amp; npm run dev</code></pre>
+        </div>
+        <p>Open <a href="http://localhost:3001">localhost:3001</a>. The UI proxies its <code>/api</code> and
+          <code>/graphql</code> calls to the API on :5006, so both need to be running. You'll see each
+          <code>pipeline → process → fetch</code> tree, watch states move
+          <code>created → running → success</code>, and replay the logs from <code>get_logger()</code>.</p>
+        <div class="cb warn"><p><b><code>address already in use</code> on :5006?</b> You probably already started the API
+          in another tab — just reuse it. Otherwise find and stop the stray process:
+          <code>lsof -i :5006</code>, then <code>kill -9 &lt;PID&gt;</code>.</p></div>
+        <div class="cb tip"><p><b>That's the whole loop:</b> write an <code>async</code> function, add the reliability
+          you need as keywords, scale it across workers, and see every run. No task plumbing to maintain.</p></div>
+      </section>
+
+      <!-- LLM teaser -->
+      <section class="step" id="next" style="border-bottom:none">
+        <div class="sh"><div class="n" style="background:var(--mut);box-shadow:none">★</div><h2>Next up: LLM tasks</h2></div>
+        <p>The same primitives are a natural fit for model calls — which fail, rate-limit, and cost money. A follow-up
+          tutorial will build an LLM workflow on top of what you just learned.</p>
+        <div class="soon">
+          <span class="tag">Coming soon</span>
+          <h3>Wrap a model call in <code>@task</code></h3>
+          <p class="mut" style="margin:0">Everything in this guide applies directly:</p>
+          <ul>
+            <li><b>Retries</b> on transient <code>429 / 5xx</code> errors, with backoff</li>
+            <li><b>Caching</b> identical prompts so you never pay twice</li>
+            <li><b>Rate limits</b> that respect your provider's tokens-per-minute quota</li>
+            <li><b>Subtasks</b> to chain multi-step agents — each step its own observable run</li>
+            <li><b>Full visibility</b> into every prompt, response and retry in the dashboard</li>
+          </ul>
+        </div>
+        <div class="cta">
+          <a class="btn p" href="features.html">Browse all features →</a>
+          <a class="btn g" href="https://github.com/pyfilament/pyfilament">View on GitHub</a>
+        </div>
+      </section>
+
+    </main>
+
+    <aside class="toc">
+      <div class="t">Steps</div>
+      <a href="#s1">1 · Set up</a>
+      <a href="#s2">2 · First task</a>
+      <a href="#s3">3 · Retries</a>
+      <a href="#s4">4 · Caching</a>
+      <a href="#s5">5 · Limits</a>
+      <a href="#s6">6 · Subtasks</a>
+      <a href="#s7">7 · Workers</a>
+      <a href="#s8">8 · Dashboard</a>
+      <a href="#next">★ · LLM next</a>
+    </aside>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <span>pyfilament — lightweight, durable task framework.</span>
+      <span class="sp"></span>
+      <a href="features.html">Features</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a href="https://github.com/pyfilament/pyfilament">GitHub</a>
+    </div>
+  </footer>
+
+<script>
+(function(){
+  var esc=function(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var KW="async|await|def|return|yield|for|in|while|if|elif|else|with|as|import|from|raise|try|except|finally|class|lambda|not|and|or|is|pass|global|nonlocal|del|assert|break|continue";
+  var re=new RegExp(
+    "(#[^\\n]*)"
+    +"|([rbfuRBFU]*\"(?:\\\\.|[^\"\\\\])*\"|[rbfuRBFU]*'(?:\\\\.|[^'\\\\])*')"
+    +"|(@[A-Za-z_][\\w.]*)"
+    +"|\\b("+KW+")\\b"
+    +"|\\b(True|False|None)\\b"
+    +"|\\b(self|cls)\\b"
+    +"|\\b(\\d+\\.?\\d*)\\b","g");
+  function hlpy(src){
+    var out="",last=0,m;
+    while((m=re.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      var cls=m[1]?"c":m[2]?"s":m[3]?"d":m[4]?"k":m[5]?"kk":m[6]?"self":"nu";
+      out+='<span class="'+cls+'">'+esc(m[0])+'</span>';
+      last=m.index+m[0].length;
+    }
+    return out+esc(src.slice(last));
+  }
+  function hlsh(src){ /* shell: only color # comments */
+    return esc(src).replace(/(^|\n)(\s*#[^\n]*)/g,function(_,a,b){return a+'<span class="c">'+b+'</span>';});
+  }
+  document.querySelectorAll('code.py').forEach(function(c){c.dataset.raw=c.textContent;c.innerHTML=hlpy(c.textContent);});
+  document.querySelectorAll('code.bash').forEach(function(c){c.dataset.raw=c.textContent;c.innerHTML=hlsh(c.textContent);});
+  document.querySelectorAll('[data-cp]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var code=btn.closest('.win').querySelector('code');
+      navigator.clipboard.writeText(code.dataset.raw||code.textContent).then(function(){
+        var t=btn.textContent;btn.textContent='copied';setTimeout(function(){btn.textContent=t;},1200);
+      });
+    });
+  });
+  /* scrollspy */
+  var links={};document.querySelectorAll('.toc a').forEach(function(a){links[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){
+      Object.values(links).forEach(function(l){l.classList.remove('on');});
+      if(links[e.target.id])links[e.target.id].classList.add('on');
+    }});
+  },{rootMargin:"-40% 0px -55% 0px"});
+  document.querySelectorAll('.step').forEach(function(s){obs.observe(s);});
+})();
+</script>
+</body>
+</html>
