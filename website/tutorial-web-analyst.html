@@ -44,10 +44,12 @@
   body[data-engine="openai"] .only.openai{display:block}
   body[data-engine="anthropic"] .only.anthropic{display:block}
   body[data-engine="gemini"] .only.gemini{display:block}
+  body[data-engine="openai-agents"] .only.openai-agents{display:block}
   .only-i{display:none}
   body[data-engine="openai"] .only-i.openai{display:inline}
   body[data-engine="anthropic"] .only-i.anthropic{display:inline}
   body[data-engine="gemini"] .only-i.gemini{display:inline}
+  body[data-engine="openai-agents"] .only-i.openai-agents{display:inline}
   /* build box */
   .build{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0 6px}
   @media(max-width:720px){.build{grid-template-columns:1fr}}
@@ -135,6 +137,7 @@
           <button data-engine="anthropic" class="on">Anthropic (Claude)</button>
           <button data-engine="openai">OpenAI</button>
           <button data-engine="gemini">Gemini</button>
+          <button data-engine="openai-agents">OpenAI Agents SDK</button>
         </div>
       </div>
     </header>
@@ -183,9 +186,19 @@ pip install google-genai
 
 export GEMINI_API_KEY="..."       # from aistudio.google.com/apikey</code></pre>
         </div>
+        <div class="win only openai-agents">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">terminal</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="bash"># in your activated pyfilament venv
+pip install openai-agents
+
+export OPENAI_API_KEY="sk-..."</code></pre>
+        </div>
         <p class="mut">It all goes in one file; the finished scripts are
-          <code>examples/web_analyst_{anthropic,openai,gemini}.py</code> — same pipeline, the SDK differs in one
-          function. <code>curl</code> just needs to be on your PATH.</p>
+          <code>examples/web_analyst_{anthropic,openai,gemini,openai_agents}.py</code> — same pipeline, the SDK differs
+          in one function. <code>curl</code> just needs to be on your PATH.</p>
+        <div class="cb tip only openai-agents"><p><b>The advanced path.</b> The OpenAI <b>Agents SDK</b> keeps the exact
+          same pipeline — only step 4 changes: instead of one model call, a cheap <b>classifier</b> routes each page to
+          a tuned <b>specialist</b> agent that can call a tool. Steps 2, 3, 5 and 6 are identical.</p></div>
         <div class="cb warn"><p><b>Point every process at one database — now.</b> filament reads the default
           <code>filament.sqlite</code> relative to each process's <i>working directory</i>, and SQLite quietly creates
           an empty one if it's missing — that's the <code class="bad">no such table: task_type</code> you'll hit when
@@ -199,7 +212,7 @@ export GEMINI_API_KEY="..."       # from aistudio.google.com/apikey</code></pre>
         <div class="sh"><div class="n">2</div><h2>Define the brief</h2></div>
         <p>One Pydantic model is the contract the model fills in — and the shape the rest of the script renders.</p>
         <div class="win">
-          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span>.py</span><span class="cp" data-cp>copy</span></div>
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span><span class="only-i openai-agents">openai_agents</span>.py</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="py">from pydantic import BaseModel
 
 class PageBrief(BaseModel):
@@ -221,7 +234,7 @@ SYSTEM = ("Analyze the page's HTML and return a brief. Ignore nav and boilerplat
           where the keywords earn their keep: <code>tries</code> rides out blips, <code>cache</code> skips
           re-downloads, <code>rate_limit</code> stays polite, <code>timeout</code> aborts a hang.</p>
         <div class="win">
-          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span>.py</span><span class="cp" data-cp>copy</span></div>
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span><span class="only-i openai-agents">openai_agents</span>.py</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="py">import asyncio
 from filament import task, get_logger
 
@@ -287,9 +300,36 @@ async def brief(url, html):
             response_json_schema=PageBrief.model_json_schema()))
     return PageBrief.model_validate_json(resp.text)</code></pre>
         </div>
+        <div class="win only openai-agents">
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_openai_agents.py</span><span class="cp" data-cp>copy</span></div>
+<pre><code class="py">import re
+from agents import Agent, Runner, function_tool
+
+class PageType(BaseModel):                          # the classifier's tiny output
+    category: str
+
+@function_tool                                      # the model can call this mid-reasoning
+def extract_links(html: str) -> list[str]:
+    return re.findall(r'href="(https?://[^"]+)"', html)[:20]
+
+classifier = Agent(name="Classifier", model="gpt-4.1", output_type=PageType,
+    instructions="Return only the category: news|docs|product|blog|reference|other.")
+news = Agent(name="News", model="gpt-4.1", output_type=PageBrief, tools=[extract_links],
+    instructions="Surface a news page's high-impact stories. " + SYSTEM)
+general = Agent(name="General", model="gpt-4.1", output_type=PageBrief, tools=[extract_links],
+    instructions=SYSTEM)
+SPECIALISTS = {"news": news}                        # category → specialist; else → general
+
+async def brief(url, html):                         # same (url, html) → PageBrief as the others
+    prompt = f"URL: {url}\n\n{html[:8000]}"
+    kind = await Runner.run(classifier, prompt)     # 1) route…
+    agent = SPECIALISTS.get(kind.final_output.category.lower(), general)
+    out = await Runner.run(agent, prompt)           # 2) …analyze with the specialist
+    return out.final_output</code></pre>
+        </div>
         <div class="cb tip"><p><b>Same contract, any SDK.</b> <code>brief()</code> returns a <code>PageBrief</code>
-          whichever model ran, so everything downstream is identical — the three scripts differ only here. Flip the
-          toggle to compare.</p></div>
+          whichever model ran, so everything downstream is identical — the scripts differ only here. Flip the
+          toggle to compare; the <b>Agents SDK</b> swaps the single call for a classifier-plus-specialist flow.</p></div>
       </section>
 
       <!-- STEP 5 -->
@@ -299,7 +339,7 @@ async def brief(url, html):
           chains <code>fetch_page → summarize</code>. Each call is a tracked child run — the same parent/child tree as
           the base tutorial's pipeline.</p>
         <div class="win">
-          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span>.py</span><span class="cp" data-cp>copy</span></div>
+          <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="fn">web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span><span class="only-i openai-agents">openai_agents</span>.py</span><span class="cp" data-cp>copy</span></div>
 <pre><code class="py">@task(tries=3, delay=2, cache=True, cache_ttl=3600)
 async def summarize(url, html):
     return await brief(url, html)                  # the SDK call from step 4
@@ -316,7 +356,7 @@ async def main():
 
 asyncio.run(main())</code></pre>
         </div>
-        <div class="run"><span class="pl">▸</span><span>python web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span>.py &nbsp;→&nbsp; <b>[reference] Welcome to Python.org — The official home of the Python programming language…</b></span></div>
+        <div class="run"><span class="pl">▸</span><span>python web_analyst_<span class="only-i anthropic">anthropic</span><span class="only-i openai">openai</span><span class="only-i gemini">gemini</span><span class="only-i openai-agents">openai_agents</span>.py &nbsp;→&nbsp; <b>[reference] Welcome to Python.org — The official home of the Python programming language…</b></span></div>
         <div class="cb tip"><p><b>Everything from the base tutorial, now on a real model.</b> Retries on transient
           <code>429/5xx</code>, identical pages served from <b>cache</b> (run it twice — the second pass pays for no
           fetches and no tokens), fleet-wide rate limits, and a multi-step pipeline as one observable tree.</p></div>
