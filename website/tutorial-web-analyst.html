@@ -379,6 +379,9 @@ cd ui &amp;&amp; npm install &amp;&amp; npm run dev               # UI on http:/
         <p>Each <code>analyze → fetch_page / summarize</code> tree is there — states moving
           <code>created → running → success</code>, the <code>get_logger()</code> lines to replay, and a cache hit
           that turns a run green without running its body.</p>
+        <div class="cb tip"><p><b>Don't see your run?</b> The dashboard fetches on load and doesn't auto-poll —
+          <b>refresh the page</b> after a run. Still empty? Widen the day-range filter (top-right), and make sure the
+          API on <code>:5006</code> is reading the same database your script wrote to (step 1).</p></div>
 
         <div class="cta">
           <a class="btn g" href="https://github.com/pyfilament/pyfilament">View on GitHub</a>

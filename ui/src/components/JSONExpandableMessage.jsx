@@ -30,7 +30,7 @@ function JSONExpandableMessage({ message, isExpanded: initIsExpanded, className,
 
     let messageJson = deepJsonParse(message);
     if (_.isString(messageJson)) {
-        return <div>{message}</div>;
+        return <div className="font-mono">{message}</div>;
     }
 
     const json = JSON.stringify(messageJson, null, 2);
@@ -41,7 +41,7 @@ function JSONExpandableMessage({ message, isExpanded: initIsExpanded, className,
     const displayMessage = preWrap(message, maxCharacters);
 
     return !isExpanded ? (
-        <div>
+        <div className="font-mono">
             <div
                 className={cn(className, {
                     'whitespace-pre': maxCharacters,
@@ -63,7 +63,7 @@ function JSONExpandableMessage({ message, isExpanded: initIsExpanded, className,
             </div>
         </div>
     ) : (
-        <div>
+        <div className="font-mono">
             <div
                 className={cn(className, {
                     'whitespace-pre': maxCharacters,

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Filament — one-slide overview</title>
+<style>
+  :root{
+    --paper:#faf9f6;--ink:#161311;--mut:#857d74;--line:#eae6df;--card:#fffffe;
+    --green:#0a9966;--green-d:#07835c;--green-bg:#eef8f2;--green-ln:#cfe7dc;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#e9e6e0;font-family:var(--sans);color:var(--ink);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  /* 16:9 canvas — screenshot at 1280x720, or present full-screen */
+  .slide{width:1280px;height:720px;background:var(--paper);position:relative;overflow:hidden;
+    border:1px solid var(--line);border-radius:18px;box-shadow:0 40px 90px -50px rgba(40,30,15,.55);
+    padding:54px 64px 0;display:flex;flex-direction:column}
+  .slide::before{content:"";position:absolute;inset:0 0 auto 0;height:6px;
+    background:linear-gradient(90deg,var(--green),#3bbf8f)}
+  /* brand row */
+  .brand{display:flex;align-items:center;gap:13px}
+  .brand img{height:42px;width:42px;border-radius:9px;display:block}
+  .brand .nm{font-size:25px;font-weight:840;letter-spacing:-.6px}
+  .brand .tag{margin-left:auto;font-size:14px;color:var(--mut);font-weight:600}
+  /* headline */
+  h1{margin:26px 0 0;font-size:42px;line-height:1.06;letter-spacing:-1.5px;font-weight:830;max-width:24ch}
+  h1 em{font-style:normal;color:var(--green-d)}
+  .lead{margin:16px 0 0;font-size:18.5px;line-height:1.5;color:#46403a;max-width:92ch}
+  .lead b{color:var(--ink);font-weight:720}
+  .lead code{font-family:var(--mono);font-size:.85em;background:#f1ece5;border:1px solid var(--line);
+    border-radius:6px;padding:2px 7px;color:var(--green-d);font-weight:700}
+  /* pillars */
+  .pillars{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin:28px 0 0}
+  .p{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:19px 20px;
+    box-shadow:0 18px 40px -38px rgba(40,30,15,.5)}
+  .p .ic{width:40px;height:40px;border-radius:11px;background:var(--green-bg);border:1px solid var(--green-ln);
+    display:grid;place-items:center;font-size:20px;margin-bottom:12px}
+  .p h3{margin:0 0 6px;font-size:18.5px;font-weight:780;letter-spacing:-.3px}
+  .p p{margin:0;font-size:14px;line-height:1.5;color:#56504a}
+  .p p b{color:var(--ink);font-weight:680}
+  /* capability strip */
+  .caps{margin:21px 0 0;font-family:var(--mono);font-size:12.5px;color:var(--mut);text-align:center;line-height:1.5}
+  .caps b{color:var(--green-d);font-weight:700}
+  /* bottom line */
+  .foot{margin-top:auto;margin-left:-64px;margin-right:-64px;padding:17px 64px;
+    background:var(--green-bg);border-top:1px solid var(--green-ln);display:flex;align-items:center;gap:14px}
+  .foot .k{flex:none;font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    color:#fff;background:var(--green);border-radius:6px;padding:5px 9px}
+  .foot p{margin:0;font-size:15px;line-height:1.45;color:#244b3c}
+  .foot p b{color:var(--green-d);font-weight:780}
+</style>
+</head>
+<body>
+  <div class="slide">
+    <div class="brand">
+      <img src="pyfilament-mark-square.png" alt="Filament" />
+      <span class="nm">Filament</span>
+      <span class="tag">Task infrastructure for production AI &amp; data pipelines</span>
+    </div>
+
+    <h1>Make production AI <em>reliable, affordable, and auditable</em>.</h1>
+    <p class="lead">A lightweight Python framework that turns any function into a <b>durable, observable task</b> —
+      automatic retries, caching, rate limits and full run history — from a single <code>@task</code> decorator.
+      No bespoke plumbing.</p>
+
+    <div class="pillars">
+      <div class="p">
+        <div class="ic">🛡️</div>
+        <h3>Reliable in production</h3>
+        <p>Automatic <b>retries, timeouts, cancellation</b> and graceful recovery. LLM and API calls fail and throttle
+          constantly — Filament keeps multi-step pipelines running without custom error handling.</p>
+      </div>
+      <div class="p">
+        <div class="ic">💰</div>
+        <h3>Lower cost &amp; risk</h3>
+        <p>Built-in <b>caching</b> never pays for the same model call twice; fleet-wide <b>rate &amp; concurrency
+          limits</b> respect provider quotas and shield downstream systems.</p>
+      </div>
+      <div class="p">
+        <div class="ic">🔎</div>
+        <h3>Fully auditable</h3>
+        <p>Every run's <b>inputs, outputs, retries, state timeline and logs</b> are recorded to a live dashboard — the
+          lineage a Center of Excellence needs for governance, model risk and debugging.</p>
+      </div>
+    </div>
+
+    <div class="caps">
+      <b>retries</b> · timeouts · <b>caching</b> · rate &amp; concurrency limits · subtasks · distributed workers ·
+      cancellation · <b>state timeline</b> · structured logging · <b>web dashboard</b>
+    </div>
+
+    <div class="foot">
+      <span class="k">Bottom line</span>
+      <p>From a laptop to a fleet of workers on the <b>same code</b> — ship AI and data pipelines that are
+        <b>dependable, cost-efficient and traceable</b>, with a fraction of the engineering effort.</p>
+    </div>
+  </div>
+</body>
+</html>

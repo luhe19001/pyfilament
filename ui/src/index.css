@@ -5,9 +5,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+        sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
 body {
-    @apply font-mono;
+    @apply font-sans;
     @apply text-sm;
+    @apply antialiased;
 }
 
 .rjsf-field-object {

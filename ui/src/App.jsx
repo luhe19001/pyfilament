@@ -7,6 +7,7 @@ import TaskRunsComparePage from './TaskRunsComparePage';
 import TaskTypePage from './TaskTypePage';
 import TaskTypeStackPage from './TaskTypeStackPage';
 import TaskTypesPage from './TaskTypesPage';
+import Layout from './components/Layout';
 import { TooltipProvider } from './components/ui/tooltip';
 
 function App() {
@@ -16,11 +17,13 @@ function App() {
                 <TanstackContext>
                     <ApolloContext>
                         <Routes>
-                            <Route path="/" element={<TaskTypesPage />} />
-                            <Route path="/task-type/:taskTypeId" element={<TaskTypePage />} />
-                            <Route path="/task-type-stack/:taskTypeIds" element={<TaskTypeStackPage />} />
-                            <Route path="/task-run/:taskRunId" element={<TaskRunPage />} />
-                            <Route path="/task-runs-compare/:taskRunIds" element={<TaskRunsComparePage />} />
+                            <Route element={<Layout />}>
+                                <Route path="/" element={<TaskTypesPage />} />
+                                <Route path="/task-type/:taskTypeId" element={<TaskTypePage />} />
+                                <Route path="/task-type-stack/:taskTypeIds" element={<TaskTypeStackPage />} />
+                                <Route path="/task-run/:taskRunId" element={<TaskRunPage />} />
+                                <Route path="/task-runs-compare/:taskRunIds" element={<TaskRunsComparePage />} />
+                            </Route>
                         </Routes>
                     </ApolloContext>
                 </TanstackContext>
